@@ -15,16 +15,29 @@ router.post('/signup', async (req, res) => {
 			'The secret youd want to know'
 		);
 
-		res.send(token);
-		console.log('trying to sign up ');
+		res.send({ token });
 	} catch (error) {
 		return res.status(422).send(error.message);
 	}
 });
 
-router.post('/signin', (req, res) => {
-	res.send('signing in I see');
-	console.log('trying to sign in');
+router.post('/signin', async (req, res) => {
+	const { email, password } = req.body;
+
+	if (!email || !password)
+		res.status(422).send({ error: 'Invalid email or password' });
+
+	const user = await User.findOne({ email });
+	try {
+		await user.comparePassword(user.password);
+		const token = jwt.sign(
+			{ userId: user._id },
+			'The secret youd want to know'
+		);
+		res.send({ token });
+	} catch (error) {
+		res.status(422).send({ error: 'Invalid email or password' });
+	}
 });
 
 module.exports = router;
